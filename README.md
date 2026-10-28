@@ -2,7 +2,7 @@
 
 Send anything to a Telegram bot: text, photo, voice note, video, PDF, Word or Excel. It lands in an Obsidian vault as a structured Markdown note, together with the original file.
 
-> Companion project: [Tanya Catatanku](../ask-my-note) is the retrieval side that answers questions over the notes this workflow writes. Both share the `Catatan ke Vector Store` ingest sub-workflow.
+> Companion project: [Ask My Note](../ask-my-note) is the retrieval side that answers questions over the notes this workflow writes. Both share the `Catatan ke Vector Store` ingest sub-workflow.
 
 ## Problem
 
