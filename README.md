@@ -2,7 +2,7 @@
 
 Send anything to a Telegram bot: text, photo, voice note, video, PDF, Word or Excel. It lands in an Obsidian vault as a structured Markdown note, together with the original file.
 
-> Companion project: [Tanya Catatanku](../n8n-tanya-catatanku) is the retrieval side that answers questions over the notes this workflow writes. Both share the `Catatan ke Vector Store` ingest sub-workflow.
+> Companion project: [Tanya Catatanku](../ask-my-note) is the retrieval side that answers questions over the notes this workflow writes. Both share the `Catatan ke Vector Store` ingest sub-workflow.
 
 ## Problem
 
@@ -34,7 +34,7 @@ n8n 2.39.8, Google Gemini API (vision and audio), Telegram Bot API, community no
 1. Download `second-brain-intake.json`.
 2. Install the community node **Telegram (Poll)** from Settings -> Community nodes.
 3. In n8n: Workflows -> Create Workflow -> **...** -> Import from File.
-4. Add two credentials: a Telegram Bot token (type *Telegram Bot Token*) and a Header Auth credential named `x-goog-api-key` holding your Gemini key.
+4. Add two credentials: a Telegram Bot token (type _Telegram Bot Token_) and a Header Auth credential named `x-goog-api-key` holding your Gemini key.
 5. Mount your Obsidian vault into the container and set `N8N_RESTRICT_FILE_ACCESS_TO` to include it, otherwise file writes fail with "Access to the file is not allowed".
 6. Send a real message to the bot to test, then Publish.
 
