@@ -1,0 +1,1509 @@
+{
+  "name": "Second Brain Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "text": "={{ $json.message.text }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "   {\"judul\":\"judul singkat catatan\",\"isi\":\"isi catatan LENGKAP tanpa diringkas, semua detail penting: angka, nama, tanggal, alamat, kesimpulan, minimal 150 kata\",\"tags\":[\"tag1\",\"tag2\"]}\n   ",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        2720,
+        976
+      ],
+      "id": "004eb779-6c23-42c0-9871-281df5cf7d32",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxOutputTokens": 4096
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2800,
+        1216
+      ],
+      "id": "b26d48e0-c7a2-409d-9525-78cd263096a5",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QmtnFr45ZdMwdZTj",
+          "name": "Gemini AI Second Brain"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json.output || $json;\nconst now = new Date(Date.now() + 7 * 3600 * 1000);\nconst p2 = n => String(n).padStart(2, '0');\nconst tgl = `${now.getUTCFullYear()}-${p2(now.getUTCMonth() + 1)}-${p2(now.getUTCDate())}`;\nconst jam = `${p2(now.getUTCHours())}:${p2(now.getUTCMinutes())}`;\nconst judul = (j.judul || 'Tanpa Judul').replace(/[\\\\/:*?\"<>|]/g, '-').trim();\n\nconst tagList = (j.tags || [])\n  .map(t => String(t).replace(/^#/, '').trim().replace(/\\s+/g, '-'))\n  .filter(Boolean);\nconst tagYaml = tagList.length ? `tags:\\n${tagList.map(t => `  - ${t}`).join('\\n')}\\n` : '';\n\nconst lamp = j.lampiran ? `lampiran: \"[[${j.lampiran}]]\"\\n` : '';\nconst media = j.lampiran ? `![[${j.lampiran}]]\\n\\n` : '';\nconst body = j.transkrip\n  ? `## Transkrip\\n\\n${j.transkrip}\\n\\n## Rangkuman\\n\\n${j.isi}`\n  : j.isi;\nconst isi = `---\\ntitle: ${judul}\\ndate: ${tgl} ${jam}\\n${tagYaml}${lamp}---\\n\\n# ${judul}\\n\\n${media}${body}\\n`;\n\nreturn [{\n  json: { filename: `/vault/2nd-brain/notes/${tgl}_${judul}.md`, judul },\n  binary: {\n    data: {\n      data: Buffer.from(isi, 'utf8').toString('base64'),\n      mimeType: 'text/markdown',\n      fileName: `${tgl}_${judul}.md`\n    }\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        288
+      ],
+      "id": "e04c60f3-c285-4478-b599-420392da9c72",
+      "name": "Siapkan File"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.filename }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        3296,
+        288
+      ],
+      "id": "54a1684f-718b-4a33-b1cf-3f34607e68bf",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Poll for messages').item.json.message.chat.id }}",
+        "text": "=Catatan tersimpan: {{ $json.judul }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3520,
+        288
+      ],
+      "id": "7fce5b5e-ff7f-4046-8f57-d55126712b4d",
+      "name": "Send a text message",
+      "webhookId": "a884fcd9-5682-4704-8e7f-ef5fcf3f4b9f",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "telegramApi": {
+          "id": "oJUJ2NbzLeTbW6ZE",
+          "name": "Telegram Second Brain"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "allowed_updates": [
+          "message"
+        ]
+      },
+      "type": "n8n-nodes-telegram-getupdates-api.telegramGetUpdates",
+      "typeVersion": 1,
+      "position": [
+        32,
+        112
+      ],
+      "id": "592a403a-1350-4c6d-8dc9-17d1dda79143",
+      "name": "Poll for messages",
+      "credentials": {
+        "botTokenTelegramApi": {
+          "id": "fuOQiAmAz2CAyuWA",
+          "name": "Telegram Bot Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "51089e3c-c352-4265-aebc-2f7765cc4604",
+              "leftValue": "={{ $json.message.photo ? 'y' : '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        256,
+        112
+      ],
+      "id": "d07d64d4-5c4b-4c10-9aef-b6588098d34e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[$json.message.photo.length - 1].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        -608
+      ],
+      "id": "ac1e8eaa-82c0-409c-affc-abaaa5c839bf",
+      "name": "Get a file",
+      "webhookId": "58cea2ea-35fa-4d9a-a5d8-7ddd27e98663",
+      "credentials": {
+        "telegramApi": {
+          "id": "oJUJ2NbzLeTbW6ZE",
+          "name": "Telegram Second Brain"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Foto ini catatan pribadi saya. Baca seluruh teks dan isi gambarnya. Balas HANYA JSON valid dengan bentuk: {\\\"judul\\\": string singkat maksimal 60 karakter, \\\"isi\\\": string markdown, \\\"tags\\\": string[]}. Aturan \\\"isi\\\": tulis dalam bahasa Indonesia, mulai dengan 1 paragraf ringkas 2-3 kalimat, lanjutkan rincian penting sebagai bullet yang diawali \\\"- \\\" (angka, nama, tanggal, alamat, harga, keputusan), minimal 150 kata, jangan pakai heading \\\"#\\\", jangan pakai tabel, jangan pakai blok kode, jangan tulis atribusi atau watermark. Jangan tulis apa pun selain JSON.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $json.mime }}\",\n            \"data\": \"{{ $json.img }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1600,
+        -608
+      ],
+      "id": "5de7eaca-c692-46c5-bb72-8bf5b5d49834",
+      "name": "HTTP Request",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O09vPv8dC48GKSsE",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const t = $json.candidates?.[0]?.content?.parts?.[0]?.text ?? '';\nlet out;\ntry { out = JSON.parse(t); } catch (e) { out = { judul: 'Foto', isi: t || String(e.message), tags: ['foto'] }; }\nreturn [{ json: { output: out } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        -560
+      ],
+      "id": "86332bf0-0f34-4412-93c3-a125f0798b39",
+      "name": "Parse Foto"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst key = Object.keys(item.binary)[0];\nconst buf = await this.helpers.getBinaryDataBuffer(0, key);\nreturn [{ json: { img: buf.toString('base64'), mime: item.binary[key].mimeType || 'image/jpeg' } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        -608
+      ],
+      "id": "822e46e6-c4d6-4cdc-af45-da96af0f045c",
+      "name": "Foto ke Base64"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        -192
+      ],
+      "id": "614f68cd-97b6-4252-9598-96291297e23e",
+      "name": "Get a file1",
+      "webhookId": "865cfe6e-9aec-4367-a9b3-ad13b7eacc8b",
+      "credentials": {
+        "telegramApi": {
+          "id": "oJUJ2NbzLeTbW6ZE",
+          "name": "Telegram Second Brain"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst key = Object.keys(item.binary)[0];\nconst buf = await this.helpers.getBinaryDataBuffer(0, key);\nlet mime = item.binary[key].mimeType || 'audio/ogg';\nif (!mime.startsWith('audio')) mime = 'audio/ogg';\nreturn [{ json: { img: buf.toString('base64'), mime } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        -192
+      ],
+      "id": "ac7b5a6e-bef5-4ce6-abf1-9144f2cf82e2",
+      "name": "Suara ke Base64"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Rekaman suara ini catatan pribadi saya. Balas HANYA JSON valid dengan bentuk: {\\\"judul\\\": string singkat maksimal 60 karakter, \\\"transkrip\\\": string, \\\"isi\\\": string markdown, \\\"tags\\\": string[]}. Aturan \\\"transkrip\\\": tulis ulang SELURUH ucapan kata per kata dalam bahasa Indonesia, jangan diringkas, jangan ditambah, jangan dikurangi. Aturan \\\"isi\\\": rangkuman dalam bahasa Indonesia, mulai dengan 1 paragraf ringkas 2-3 kalimat, lanjutkan rincian penting sebagai bullet yang diawali \\\"- \\\" (angka, nama, tanggal, alamat, harga, keputusan), minimal 150 kata, jangan pakai heading \\\"#\\\", jangan pakai tabel, jangan pakai blok kode. Jangan tulis apa pun selain JSON.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $('Suara ke Base64').first().json.mime }}\",\n            \"data\": \"{{ $('Suara ke Base64').first().json.img }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1600,
+        -192
+      ],
+      "id": "b9a8a18a-3834-4173-9bfb-f8dacdb53049",
+      "name": "HTTP Request1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O09vPv8dC48GKSsE",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const t = $json.candidates?.[0]?.content?.parts?.[0]?.text ?? '';\nlet out;\ntry { out = JSON.parse(t); } catch (e) { out = { judul: 'Suara', isi: t || String(e.message), tags: ['suara'] }; }\nreturn [{ json: { output: out } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        -176
+      ],
+      "id": "a38782e2-afaa-4836-8fad-3b2323cac62a",
+      "name": "Parse Suara"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.video.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        208
+      ],
+      "id": "487be8b3-05d6-42ec-aa2b-897b1a4652c5",
+      "name": "Get a file2",
+      "webhookId": "93f00ed6-e852-4de9-a92e-e23cc8d42775",
+      "credentials": {
+        "telegramApi": {
+          "id": "oJUJ2NbzLeTbW6ZE",
+          "name": "Telegram Second Brain"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst key = Object.keys(item.binary)[0];\nconst buf = await this.helpers.getBinaryDataBuffer(0, key);\nreturn [{ json: { img: buf.toString('base64'), mime: 'video/mp4' } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        208
+      ],
+      "id": "b4181d61-9110-4fd3-adce-9cf3833716cd",
+      "name": "Video ke Base64"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Video ini catatan pribadi saya. Balas HANYA JSON valid dengan bentuk: {\\\"judul\\\": string singkat maksimal 60 karakter, \\\"transkrip\\\": string, \\\"isi\\\": string markdown, \\\"tags\\\": string[]}. Aturan \\\"transkrip\\\": tulis ulang semua ucapan yang terdengar di video, kata per kata, dalam bahasa Indonesia, jangan diringkas; kalau tidak ada suara sama sekali, isi dengan string kosong. Aturan \\\"isi\\\": rangkuman dalam bahasa Indonesia tentang apa yang terlihat dan terdengar, mulai dengan 1 paragraf ringkas 2-3 kalimat, lanjutkan rincian penting sebagai bullet yang diawali \\\"- \\\" (angka, nama, tanggal, alamat, keputusan), minimal 150 kata, jangan pakai heading \\\"#\\\", jangan pakai tabel, jangan pakai blok kode. Jangan tulis apa pun selain JSON.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $('Video ke Base64').first().json.mime }}\",\n            \"data\": \"{{ $('Video ke Base64').first().json.img }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1600,
+        208
+      ],
+      "id": "a3f8025f-8c9a-45b6-84a4-97175c879c9d",
+      "name": "HTTP Request2",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O09vPv8dC48GKSsE",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "231c1457-ee81-4c3b-9cae-ea9f6a8ff036",
+              "leftValue": "={{ $json.message.voice ? 'y' : '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        480,
+        336
+      ],
+      "id": "41c190f1-e4d2-4b1a-a518-6c7d8c926f86",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b8f2f03b-1a1a-443e-b21b-88baa04a383e",
+              "leftValue": "={{ $json.message.video ? 'y' : '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        704,
+        544
+      ],
+      "id": "debb2534-7a12-419d-9741-0e78f9a8dccc",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const t = $json.candidates?.[0]?.content?.parts?.[0]?.text ?? '';\nlet out;\ntry { out = JSON.parse(t); } catch (e) { out = { judul: 'Video', isi: t || String(e.message), tags: ['video'] }; }\nreturn [{ json: { output: out } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        208
+      ],
+      "id": "71e35443-77d8-4e8f-b71d-0387e7ec1ffb",
+      "name": "Parse Video"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Foto ini catatan pribadi saya. Baca seluruh teks dan isi gambarnya. Balas HANYA JSON valid dengan bentuk: {\\\"judul\\\": string singkat maksimal 60 karakter, \\\"isi\\\": string markdown, \\\"tags\\\": string[]}. Aturan \\\"isi\\\": tulis dalam bahasa Indonesia, mulai dengan 1 paragraf ringkas 2-3 kalimat, lanjutkan rincian penting sebagai bullet yang diawali \\\"- \\\" (angka, nama, tanggal, alamat, harga, keputusan), minimal 150 kata, jangan pakai heading \\\"#\\\", jangan pakai tabel, jangan pakai blok kode, jangan tulis atribusi atau watermark. Jangan tulis apa pun selain JSON.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $json.mime }}\",\n            \"data\": \"{{ $json.img }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1824,
+        -512
+      ],
+      "id": "11c9b755-c709-4070-bd4b-59e2269fa66b",
+      "name": "HTTP Backup",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O09vPv8dC48GKSsE",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Foto ini catatan pribadi saya. Baca seluruh teks dan isi gambarnya. Balas HANYA JSON valid dengan bentuk: {\\\"judul\\\": string singkat maksimal 60 karakter, \\\"isi\\\": string markdown, \\\"tags\\\": string[]}. Aturan \\\"isi\\\": tulis dalam bahasa Indonesia, mulai dengan 1 paragraf ringkas 2-3 kalimat, lanjutkan rincian penting sebagai bullet yang diawali \\\"- \\\" (angka, nama, tanggal, alamat, harga, keputusan), minimal 150 kata, jangan pakai heading \\\"#\\\", jangan pakai tabel, jangan pakai blok kode, jangan tulis atribusi atau watermark. Jangan tulis apa pun selain JSON.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $json.mime }}\",\n            \"data\": \"{{ $json.img }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2048,
+        -384
+      ],
+      "id": "128a1be3-a016-4917-95c4-e52e48284e4a",
+      "name": "HTTP Backup1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O09vPv8dC48GKSsE",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json.output || $json;\nconst b64 = $('Foto ke Base64').first().json;\nconst now = new Date(Date.now() + 7 * 3600 * 1000);\nconst p2 = n => String(n).padStart(2, '0');\nconst tgl = `${now.getUTCFullYear()}-${p2(now.getUTCMonth() + 1)}-${p2(now.getUTCDate())}`;\nconst judul = (j.judul || 'Tanpa Judul').replace(/[\\\\/:*?\"<>|]/g, '-').trim();\nconst ext = (b64.mime || 'image/jpeg').split('/')[1].replace('jpeg', 'jpg');\nconst nama = `${tgl}_${judul}.${ext}`;\n\nreturn [{\n  json: { output: { ...j, lampiran: nama } },\n  binary: { data: { data: b64.img, mimeType: b64.mime, fileName: nama } }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2496,
+        -560
+      ],
+      "id": "3bec3ca3-6275-45d9-b986-76dd529dedb6",
+      "name": "Lampiran Foto"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/vault/2nd-brain/lampiran/{{ $json.output.lampiran }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        2784,
+        -560
+      ],
+      "id": "7fec4525-193d-486b-a6c2-24067057b56e",
+      "name": "Tulis Lampiran Foto"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json.output || $json;\nconst b64 = $('Suara ke Base64').first().json;\nconst now = new Date(Date.now() + 7 * 3600 * 1000);\nconst p2 = n => String(n).padStart(2, '0');\nconst tgl = `${now.getUTCFullYear()}-${p2(now.getUTCMonth() + 1)}-${p2(now.getUTCDate())}`;\nconst judul = (j.judul || 'Tanpa Judul').replace(/[\\\\/:*?\"<>|]/g, '-').trim();\nconst ext = 'ogg';\nconst nama = `${tgl}_${judul}.${ext}`;\n\nreturn [{\n  json: { output: { ...j, lampiran: nama } },\n  binary: { data: { data: b64.img, mimeType: b64.mime, fileName: nama } }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2496,
+        -176
+      ],
+      "id": "6439ddbc-939f-4cf9-8161-e3aaed3be2af",
+      "name": "Lampiran Suara"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/vault/2nd-brain/lampiran/{{ $json.output.lampiran }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        2784,
+        -176
+      ],
+      "id": "fd834d63-dde0-47ff-80b2-640f6cb5fcab",
+      "name": "Tulis Lampiran Suara"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json.output || $json;\nconst b64 = $('Video ke Base64').first().json;\nconst now = new Date(Date.now() + 7 * 3600 * 1000);\nconst p2 = n => String(n).padStart(2, '0');\nconst tgl = `${now.getUTCFullYear()}-${p2(now.getUTCMonth() + 1)}-${p2(now.getUTCDate())}`;\nconst judul = (j.judul || 'Tanpa Judul').replace(/[\\\\/:*?\"<>|]/g, '-').trim();\nconst ext = 'mp4';\nconst nama = `${tgl}_${judul}.${ext}`;\n\nreturn [{\n  json: { output: { ...j, lampiran: nama } },\n  binary: { data: { data: b64.img, mimeType: b64.mime, fileName: nama } }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2496,
+        208
+      ],
+      "id": "23c5fb93-db73-4a5d-a8c3-4e03bf94c40f",
+      "name": "Lampiran Video"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/vault/2nd-brain/lampiran/{{ $json.output.lampiran }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        2784,
+        208
+      ],
+      "id": "9fb85e1d-086a-4e86-8c72-4e8161a24961",
+      "name": "Tulis Lampiran Video"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Rekaman suara ini catatan pribadi saya. Balas HANYA JSON valid dengan bentuk: {\\\"judul\\\": string singkat maksimal 60 karakter, \\\"transkrip\\\": string, \\\"isi\\\": string markdown, \\\"tags\\\": string[]}. Aturan \\\"transkrip\\\": tulis ulang SELURUH ucapan kata per kata dalam bahasa Indonesia, jangan diringkas, jangan ditambah, jangan dikurangi. Aturan \\\"isi\\\": rangkuman dalam bahasa Indonesia, mulai dengan 1 paragraf ringkas 2-3 kalimat, lanjutkan rincian penting sebagai bullet yang diawali \\\"- \\\" (angka, nama, tanggal, alamat, harga, keputusan), minimal 150 kata, jangan pakai heading \\\"#\\\", jangan pakai tabel, jangan pakai blok kode. Jangan tulis apa pun selain JSON.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $('Suara ke Base64').first().json.mime }}\",\n            \"data\": \"{{ $('Suara ke Base64').first().json.img }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1824,
+        -80
+      ],
+      "id": "ae11876f-d718-47c3-b321-0a7d9dfc81c7",
+      "name": "HTTP Backup2",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O09vPv8dC48GKSsE",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Rekaman suara ini catatan pribadi saya. Balas HANYA JSON valid dengan bentuk: {\\\"judul\\\": string singkat maksimal 60 karakter, \\\"transkrip\\\": string, \\\"isi\\\": string markdown, \\\"tags\\\": string[]}. Aturan \\\"transkrip\\\": tulis ulang SELURUH ucapan kata per kata dalam bahasa Indonesia, jangan diringkas, jangan ditambah, jangan dikurangi. Aturan \\\"isi\\\": rangkuman dalam bahasa Indonesia, mulai dengan 1 paragraf ringkas 2-3 kalimat, lanjutkan rincian penting sebagai bullet yang diawali \\\"- \\\" (angka, nama, tanggal, alamat, harga, keputusan), minimal 150 kata, jangan pakai heading \\\"#\\\", jangan pakai tabel, jangan pakai blok kode. Jangan tulis apa pun selain JSON.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $('Suara ke Base64').first().json.mime }}\",\n            \"data\": \"{{ $('Suara ke Base64').first().json.img }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2048,
+        16
+      ],
+      "id": "93d9fb53-255c-4446-a1d0-1237170af50c",
+      "name": "HTTP Backup3",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O09vPv8dC48GKSsE",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Video ini catatan pribadi saya. Balas HANYA JSON valid dengan bentuk: {\\\"judul\\\": string singkat maksimal 60 karakter, \\\"transkrip\\\": string, \\\"isi\\\": string markdown, \\\"tags\\\": string[]}. Aturan \\\"transkrip\\\": tulis ulang semua ucapan yang terdengar di video, kata per kata, dalam bahasa Indonesia, jangan diringkas; kalau tidak ada suara sama sekali, isi dengan string kosong. Aturan \\\"isi\\\": rangkuman dalam bahasa Indonesia tentang apa yang terlihat dan terdengar, mulai dengan 1 paragraf ringkas 2-3 kalimat, lanjutkan rincian penting sebagai bullet yang diawali \\\"- \\\" (angka, nama, tanggal, alamat, keputusan), minimal 150 kata, jangan pakai heading \\\"#\\\", jangan pakai tabel, jangan pakai blok kode. Jangan tulis apa pun selain JSON.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $('Video ke Base64').first().json.mime }}\",\n            \"data\": \"{{ $('Video ke Base64').first().json.img }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1824,
+        352
+      ],
+      "id": "50ead9e7-2347-4efb-b29c-80b2df8bca4e",
+      "name": "HTTP Backup4",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O09vPv8dC48GKSsE",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Video ini catatan pribadi saya. Balas HANYA JSON valid dengan bentuk: {\\\"judul\\\": string singkat maksimal 60 karakter, \\\"transkrip\\\": string, \\\"isi\\\": string markdown, \\\"tags\\\": string[]}. Aturan \\\"transkrip\\\": tulis ulang semua ucapan yang terdengar di video, kata per kata, dalam bahasa Indonesia, jangan diringkas; kalau tidak ada suara sama sekali, isi dengan string kosong. Aturan \\\"isi\\\": rangkuman dalam bahasa Indonesia tentang apa yang terlihat dan terdengar, mulai dengan 1 paragraf ringkas 2-3 kalimat, lanjutkan rincian penting sebagai bullet yang diawali \\\"- \\\" (angka, nama, tanggal, alamat, keputusan), minimal 150 kata, jangan pakai heading \\\"#\\\", jangan pakai tabel, jangan pakai blok kode. Jangan tulis apa pun selain JSON.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $('Video ke Base64').first().json.mime }}\",\n            \"data\": \"{{ $('Video ke Base64').first().json.img }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2048,
+        432
+      ],
+      "id": "1f7a2b07-7c85-4092-945c-39eb55fa26ca",
+      "name": "HTTP Backup5",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O09vPv8dC48GKSsE",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.document.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        640
+      ],
+      "id": "dd02ecee-25b4-4ed9-a1c8-1601ddd15ab7",
+      "name": "Get a file3",
+      "webhookId": "ec86bc57-57fd-455a-83e2-fbfa02158d67",
+      "credentials": {
+        "telegramApi": {
+          "id": "oJUJ2NbzLeTbW6ZE",
+          "name": "Telegram Second Brain"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst key = Object.keys(item.binary)[0];\nconst buf = await this.helpers.getBinaryDataBuffer(0, key);\nreturn [{ json: { img: buf.toString('base64'), mime: item.binary[key].mimeType || 'application/pdf' } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        640
+      ],
+      "id": "19178bb7-c81c-4bff-b7d2-04a104e221de",
+      "name": "Dokumen ke Base64"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Dokumen ini catatan pribadi saya. Baca seluruh isinya. Balas HANYA JSON valid dengan bentuk: {\\\"judul\\\": string singkat maksimal 60 karakter, \\\"isi\\\": string markdown, \\\"tags\\\": string[]}. Aturan \\\"isi\\\": tulis dalam bahasa Indonesia, mulai dengan 1 paragraf ringkas 2-3 kalimat, lanjutkan rincian penting sebagai bullet yang diawali \\\"- \\\" (angka, nama, tanggal, alamat, harga, keputusan), minimal 150 kata, jangan pakai heading \\\"#\\\", jangan pakai tabel, jangan pakai blok kode. Jangan tulis apa pun selain JSON.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $json.mime }}\",\n            \"data\": \"{{ $json.img }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1600,
+        640
+      ],
+      "id": "36af90a9-e50b-4c11-9532-65a843c43511",
+      "name": "HTTP Request3",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O09vPv8dC48GKSsE",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Dokumen ini catatan pribadi saya. Baca seluruh isinya. Balas HANYA JSON valid dengan bentuk: {\\\"judul\\\": string singkat maksimal 60 karakter, \\\"isi\\\": string markdown, \\\"tags\\\": string[]}. Aturan \\\"isi\\\": tulis dalam bahasa Indonesia, mulai dengan 1 paragraf ringkas 2-3 kalimat, lanjutkan rincian penting sebagai bullet yang diawali \\\"- \\\" (angka, nama, tanggal, alamat, harga, keputusan), minimal 150 kata, jangan pakai heading \\\"#\\\", jangan pakai tabel, jangan pakai blok kode. Jangan tulis apa pun selain JSON.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $('Dokumen ke Base64').first().json.mime }}\",\n            \"data\": \"{{ $('Dokumen ke Base64').first().json.img }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1824,
+        768
+      ],
+      "id": "fd81fc6c-767d-4a3b-ac1c-a05d78074502",
+      "name": "HTTP Backup6",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O09vPv8dC48GKSsE",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"role\": \"user\",\n      \"parts\": [\n        {\n          \"text\": \"Dokumen ini catatan pribadi saya. Baca seluruh isinya. Balas HANYA JSON valid dengan bentuk: {\\\"judul\\\": string singkat maksimal 60 karakter, \\\"isi\\\": string markdown, \\\"tags\\\": string[]}. Aturan \\\"isi\\\": tulis dalam bahasa Indonesia, mulai dengan 1 paragraf ringkas 2-3 kalimat, lanjutkan rincian penting sebagai bullet yang diawali \\\"- \\\" (angka, nama, tanggal, alamat, harga, keputusan), minimal 150 kata, jangan pakai heading \\\"#\\\", jangan pakai tabel, jangan pakai blok kode. Jangan tulis apa pun selain JSON.\"\n        },\n        {\n          \"inline_data\": {\n            \"mime_type\": \"{{ $('Dokumen ke Base64').first().json.mime }}\",\n            \"data\": \"{{ $('Dokumen ke Base64').first().json.img }}\"\n          }\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"responseMimeType\": \"application/json\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2048,
+        832
+      ],
+      "id": "73f1be47-b043-422b-b0b5-b7c277c7cfc0",
+      "name": "HTTP Backup7",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O09vPv8dC48GKSsE",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $json.output || $json;\nconst b64 = $('Dokumen ke Base64').first().json;\nconst now = new Date(Date.now() + 7 * 3600 * 1000);\nconst p2 = n => String(n).padStart(2, '0');\nconst tgl = `${now.getUTCFullYear()}-${p2(now.getUTCMonth() + 1)}-${p2(now.getUTCDate())}`;\nconst judul = (j.judul || 'Tanpa Judul').replace(/[\\\\/:*?\"<>|]/g, '-').trim();\nconst ext = b64.mime.includes('pdf') ? 'pdf' : 'docx';\nconst nama = `${tgl}_${judul}.${ext}`;\n\nreturn [{\n  json: { output: { ...j, lampiran: nama } },\n  binary: { data: { data: b64.img, mimeType: b64.mime, fileName: nama } }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2496,
+        624
+      ],
+      "id": "82adddc5-c728-4817-9544-0e2da5bab2ba",
+      "name": "Lampiran Dokumen"
+    },
+    {
+      "parameters": {
+        "jsCode": "const t = $json.candidates?.[0]?.content?.parts?.[0]?.text ?? '';\nlet out;\ntry { out = JSON.parse(t); } catch (e) { out = { judul: 'Dokumen', isi: t || String(e.message), tags: ['dokumen'] }; }\nreturn [{ json: { output: out } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2272,
+        624
+      ],
+      "id": "f4553f4a-e592-4034-9e9d-551a54af5fde",
+      "name": "Parse Dokumen"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/vault/2nd-brain/lampiran/{{ $json.output.lampiran }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        2784,
+        624
+      ],
+      "id": "58f1532e-8b6e-47e2-ad8b-e62519af550a",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "53c4a010-814c-44c1-ae3f-c59c8997a029",
+              "leftValue": "={{ $json.message.document && $json.message.document.mime_type === 'application/pdf' ? 'y' : '' }}",
+              "rightValue": "=application/pdf",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        928,
+        768
+      ],
+      "id": "bca70c47-c37e-4f3e-932f-6d3164bc6b13",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "BMcsHkevknzWpytx",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/BMcsHkevknzWpytx",
+          "cachedResultName": "Catatan ke Vector Store"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        3744,
+        288
+      ],
+      "id": "2a203dd3-fa0e-4d26-a314-51041221877c",
+      "name": "Call 'Catatan ke Vector Store'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Siapkan File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Siapkan File": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll for messages": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Foto ke Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Parse Foto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Backup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Foto": {
+      "main": [
+        [
+          {
+            "node": "Lampiran Foto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Foto ke Base64": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file1": {
+      "main": [
+        [
+          {
+            "node": "Suara ke Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Suara ke Base64": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Parse Suara",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Backup2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Suara": {
+      "main": [
+        [
+          {
+            "node": "Lampiran Suara",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file2": {
+      "main": [
+        [
+          {
+            "node": "Video ke Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video ke Base64": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Parse Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Backup4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Get a file1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Get a file2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Video": {
+      "main": [
+        [
+          {
+            "node": "Lampiran Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Backup": {
+      "main": [
+        [
+          {
+            "node": "Parse Foto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Backup1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Backup1": {
+      "main": [
+        [
+          {
+            "node": "Parse Foto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lampiran Foto": {
+      "main": [
+        [
+          {
+            "node": "Tulis Lampiran Foto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tulis Lampiran Foto": {
+      "main": [
+        [
+          {
+            "node": "Siapkan File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lampiran Suara": {
+      "main": [
+        [
+          {
+            "node": "Tulis Lampiran Suara",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tulis Lampiran Suara": {
+      "main": [
+        [
+          {
+            "node": "Siapkan File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lampiran Video": {
+      "main": [
+        [
+          {
+            "node": "Tulis Lampiran Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tulis Lampiran Video": {
+      "main": [
+        [
+          {
+            "node": "Siapkan File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Backup2": {
+      "main": [
+        [
+          {
+            "node": "Parse Suara",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Backup3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Backup3": {
+      "main": [
+        [
+          {
+            "node": "Parse Suara",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Backup4": {
+      "main": [
+        [
+          {
+            "node": "Parse Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Backup5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Backup5": {
+      "main": [
+        [
+          {
+            "node": "Parse Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file3": {
+      "main": [
+        [
+          {
+            "node": "Dokumen ke Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dokumen ke Base64": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Backup6": {
+      "main": [
+        [
+          {
+            "node": "Parse Dokumen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Backup7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Parse Dokumen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Backup6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Backup7": {
+      "main": [
+        [
+          {
+            "node": "Parse Dokumen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Dokumen": {
+      "main": [
+        [
+          {
+            "node": "Lampiran Dokumen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lampiran Dokumen": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Get a file3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "Siapkan File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Call 'Catatan ke Vector Store'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "xajmaaRNlPtWJ0hx",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false,
+    "timezone": "Asia/Jakarta"
+  },
+  "versionId": "7cf35d7c-9e8a-4d59-9e0b-5c10bb7b8af9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fbf77636e68d58b9fe4be74588f90af44ef2b72af30690c06a01742229fdb343"
+  },
+  "nodeGroups": [],
+  "id": "qCZEwf10p4oUiZdS",
+  "tags": [
+    {
+      "updatedAt": "2026-10-20T10:19:45.794Z",
+      "createdAt": "2026-10-20T10:19:45.794Z",
+      "id": "JBmgxhdUsiMH56t0",
+      "name": "project-2"
+    }
+  ]
+}
