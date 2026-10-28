@@ -10,10 +10,7 @@
       },
       "type": "@n8n/n8n-nodes-langchain.informationExtractor",
       "typeVersion": 1.2,
-      "position": [
-        2720,
-        976
-      ],
+      "position": [2720, 976],
       "id": "004eb779-6c23-42c0-9871-281df5cf7d32",
       "name": "Information Extractor"
     },
@@ -25,10 +22,7 @@
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
-      "position": [
-        2800,
-        1216
-      ],
+      "position": [2800, 1216],
       "id": "b26d48e0-c7a2-409d-9525-78cd263096a5",
       "name": "Google Gemini Chat Model",
       "credentials": {
@@ -44,10 +38,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        3072,
-        288
-      ],
+      "position": [3072, 288],
       "id": "e04c60f3-c285-4478-b599-420392da9c72",
       "name": "Siapkan File"
     },
@@ -59,10 +50,7 @@
       },
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
-      "position": [
-        3296,
-        288
-      ],
+      "position": [3296, 288],
       "id": "54a1684f-718b-4a33-b1cf-3f34607e68bf",
       "name": "Read/Write Files from Disk"
     },
@@ -76,10 +64,7 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [
-        3520,
-        288
-      ],
+      "position": [3520, 288],
       "id": "7fce5b5e-ff7f-4046-8f57-d55126712b4d",
       "name": "Send a text message",
       "webhookId": "a884fcd9-5682-4704-8e7f-ef5fcf3f4b9f",
@@ -94,16 +79,11 @@
     },
     {
       "parameters": {
-        "allowed_updates": [
-          "message"
-        ]
+        "allowed_updates": ["message"]
       },
       "type": "n8n-nodes-telegram-getupdates-api.telegramGetUpdates",
       "typeVersion": 1,
-      "position": [
-        32,
-        112
-      ],
+      "position": [32, 112],
       "id": "592a403a-1350-4c6d-8dc9-17d1dda79143",
       "name": "Poll for messages",
       "credentials": {
@@ -142,10 +122,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        256,
-        112
-      ],
+      "position": [256, 112],
       "id": "d07d64d4-5c4b-4c10-9aef-b6588098d34e",
       "name": "If"
     },
@@ -157,10 +134,7 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [
-        1152,
-        -608
-      ],
+      "position": [1152, -608],
       "id": "ac1e8eaa-82c0-409c-affc-abaaa5c839bf",
       "name": "Get a file",
       "webhookId": "58cea2ea-35fa-4d9a-a5d8-7ddd27e98663",
@@ -184,10 +158,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        1600,
-        -608
-      ],
+      "position": [1600, -608],
       "id": "5de7eaca-c692-46c5-bb72-8bf5b5d49834",
       "name": "HTTP Request",
       "retryOnFail": true,
@@ -206,10 +177,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        2272,
-        -560
-      ],
+      "position": [2272, -560],
       "id": "86332bf0-0f34-4412-93c3-a125f0798b39",
       "name": "Parse Foto"
     },
@@ -219,10 +187,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        1376,
-        -608
-      ],
+      "position": [1376, -608],
       "id": "822e46e6-c4d6-4cdc-af45-da96af0f045c",
       "name": "Foto ke Base64"
     },
@@ -234,10 +199,7 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [
-        1152,
-        -192
-      ],
+      "position": [1152, -192],
       "id": "614f68cd-97b6-4252-9598-96291297e23e",
       "name": "Get a file1",
       "webhookId": "865cfe6e-9aec-4367-a9b3-ad13b7eacc8b",
@@ -254,10 +216,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        1376,
-        -192
-      ],
+      "position": [1376, -192],
       "id": "ac7b5a6e-bef5-4ce6-abf1-9144f2cf82e2",
       "name": "Suara ke Base64"
     },
@@ -274,10 +233,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        1600,
-        -192
-      ],
+      "position": [1600, -192],
       "id": "b9a8a18a-3834-4173-9bfb-f8dacdb53049",
       "name": "HTTP Request1",
       "retryOnFail": true,
@@ -296,10 +252,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        2272,
-        -176
-      ],
+      "position": [2272, -176],
       "id": "a38782e2-afaa-4836-8fad-3b2323cac62a",
       "name": "Parse Suara"
     },
@@ -311,10 +264,7 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [
-        1152,
-        208
-      ],
+      "position": [1152, 208],
       "id": "487be8b3-05d6-42ec-aa2b-897b1a4652c5",
       "name": "Get a file2",
       "webhookId": "93f00ed6-e852-4de9-a92e-e23cc8d42775",
@@ -331,10 +281,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        1376,
-        208
-      ],
+      "position": [1376, 208],
       "id": "b4181d61-9110-4fd3-adce-9cf3833716cd",
       "name": "Video ke Base64"
     },
@@ -351,10 +298,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        1600,
-        208
-      ],
+      "position": [1600, 208],
       "id": "a3f8025f-8c9a-45b6-84a4-97175c879c9d",
       "name": "HTTP Request2",
       "retryOnFail": true,
@@ -396,10 +340,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        480,
-        336
-      ],
+      "position": [480, 336],
       "id": "41c190f1-e4d2-4b1a-a518-6c7d8c926f86",
       "name": "If2"
     },
@@ -430,10 +371,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        704,
-        544
-      ],
+      "position": [704, 544],
       "id": "debb2534-7a12-419d-9741-0e78f9a8dccc",
       "name": "If3"
     },
@@ -443,10 +381,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        2272,
-        208
-      ],
+      "position": [2272, 208],
       "id": "71e35443-77d8-4e8f-b71d-0387e7ec1ffb",
       "name": "Parse Video"
     },
@@ -463,10 +398,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        1824,
-        -512
-      ],
+      "position": [1824, -512],
       "id": "11c9b755-c709-4070-bd4b-59e2269fa66b",
       "name": "HTTP Backup",
       "retryOnFail": true,
@@ -492,10 +424,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        2048,
-        -384
-      ],
+      "position": [2048, -384],
       "id": "128a1be3-a016-4917-95c4-e52e48284e4a",
       "name": "HTTP Backup1",
       "retryOnFail": true,
@@ -513,10 +442,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        2496,
-        -560
-      ],
+      "position": [2496, -560],
       "id": "3bec3ca3-6275-45d9-b986-76dd529dedb6",
       "name": "Lampiran Foto"
     },
@@ -528,10 +454,7 @@
       },
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
-      "position": [
-        2784,
-        -560
-      ],
+      "position": [2784, -560],
       "id": "7fec4525-193d-486b-a6c2-24067057b56e",
       "name": "Tulis Lampiran Foto"
     },
@@ -541,10 +464,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        2496,
-        -176
-      ],
+      "position": [2496, -176],
       "id": "6439ddbc-939f-4cf9-8161-e3aaed3be2af",
       "name": "Lampiran Suara"
     },
@@ -556,10 +476,7 @@
       },
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
-      "position": [
-        2784,
-        -176
-      ],
+      "position": [2784, -176],
       "id": "fd834d63-dde0-47ff-80b2-640f6cb5fcab",
       "name": "Tulis Lampiran Suara"
     },
@@ -569,10 +486,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        2496,
-        208
-      ],
+      "position": [2496, 208],
       "id": "23c5fb93-db73-4a5d-a8c3-4e03bf94c40f",
       "name": "Lampiran Video"
     },
@@ -584,10 +498,7 @@
       },
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
-      "position": [
-        2784,
-        208
-      ],
+      "position": [2784, 208],
       "id": "9fb85e1d-086a-4e86-8c72-4e8161a24961",
       "name": "Tulis Lampiran Video"
     },
@@ -604,10 +515,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        1824,
-        -80
-      ],
+      "position": [1824, -80],
       "id": "ae11876f-d718-47c3-b321-0a7d9dfc81c7",
       "name": "HTTP Backup2",
       "retryOnFail": true,
@@ -633,10 +541,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        2048,
-        16
-      ],
+      "position": [2048, 16],
       "id": "93d9fb53-255c-4446-a1d0-1237170af50c",
       "name": "HTTP Backup3",
       "retryOnFail": true,
@@ -661,10 +566,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        1824,
-        352
-      ],
+      "position": [1824, 352],
       "id": "50ead9e7-2347-4efb-b29c-80b2df8bca4e",
       "name": "HTTP Backup4",
       "retryOnFail": true,
@@ -690,10 +592,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        2048,
-        432
-      ],
+      "position": [2048, 432],
       "id": "1f7a2b07-7c85-4092-945c-39eb55fa26ca",
       "name": "HTTP Backup5",
       "retryOnFail": true,
@@ -713,10 +612,7 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [
-        1152,
-        640
-      ],
+      "position": [1152, 640],
       "id": "dd02ecee-25b4-4ed9-a1c8-1601ddd15ab7",
       "name": "Get a file3",
       "webhookId": "ec86bc57-57fd-455a-83e2-fbfa02158d67",
@@ -733,10 +629,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        1376,
-        640
-      ],
+      "position": [1376, 640],
       "id": "19178bb7-c81c-4bff-b7d2-04a104e221de",
       "name": "Dokumen ke Base64"
     },
@@ -753,10 +646,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        1600,
-        640
-      ],
+      "position": [1600, 640],
       "id": "36af90a9-e50b-4c11-9532-65a843c43511",
       "name": "HTTP Request3",
       "retryOnFail": true,
@@ -782,10 +672,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        1824,
-        768
-      ],
+      "position": [1824, 768],
       "id": "fd81fc6c-767d-4a3b-ac1c-a05d78074502",
       "name": "HTTP Backup6",
       "retryOnFail": true,
@@ -811,10 +698,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
-      "position": [
-        2048,
-        832
-      ],
+      "position": [2048, 832],
       "id": "73f1be47-b043-422b-b0b5-b7c277c7cfc0",
       "name": "HTTP Backup7",
       "retryOnFail": true,
@@ -832,10 +716,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        2496,
-        624
-      ],
+      "position": [2496, 624],
       "id": "82adddc5-c728-4817-9544-0e2da5bab2ba",
       "name": "Lampiran Dokumen"
     },
@@ -845,10 +726,7 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        2272,
-        624
-      ],
+      "position": [2272, 624],
       "id": "f4553f4a-e592-4034-9e9d-551a54af5fde",
       "name": "Parse Dokumen"
     },
@@ -860,10 +738,7 @@
       },
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1.1,
-      "position": [
-        2784,
-        624
-      ],
+      "position": [2784, 624],
       "id": "58f1532e-8b6e-47e2-ad8b-e62519af550a",
       "name": "Read/Write Files from Disk1"
     },
@@ -894,10 +769,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
-      "position": [
-        928,
-        768
-      ],
+      "position": [928, 768],
       "id": "bca70c47-c37e-4f3e-932f-6d3164bc6b13",
       "name": "If4"
     },
@@ -924,10 +796,7 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
-      "position": [
-        3744,
-        288
-      ],
+      "position": [3744, 288],
       "id": "2a203dd3-fa0e-4d26-a314-51041221877c",
       "name": "Call 'Catatan ke Vector Store'"
     }
